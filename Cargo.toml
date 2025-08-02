@@ -1,0 +1,12 @@
+[package]
+name = "hirust-resp"
+authors = ["dengpju"]
+version = "0.1.0"
+edition = "2024"
+description = "A Rust Responder Lib"
+license = "MIT"
+
+[dependencies]
+actix-web = "4.9.0"
+serde_json = "1.0.142"
+serde = { version = "1.0.217", features = ["derive"] }
