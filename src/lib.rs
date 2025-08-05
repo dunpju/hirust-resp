@@ -1,53 +1,73 @@
 use actix_web::body::BoxBody;
-use actix_web::http::header::ContentType;
 use actix_web::http::StatusCode;
-use actix_web::{error, HttpRequest, HttpResponse, Responder};
+use actix_web::http::header::ContentType;
+use actix_web::{HttpRequest, HttpResponse, Responder, error};
 use serde::Serialize;
 use std::fmt::{Debug, Display, Formatter};
 
 pub fn success<T: Sized + Serialize + Default>(data: Option<T>) -> Response<T> {
-    Response{
+    Response {
         data,
         msg: String::from("成功"),
-        code: 200 }
+        code: 200,
+    }
 }
 
-pub fn success_respond_to<T: Sized + Serialize + Default>(req: &HttpRequest, data: Option<T>) -> HttpResponse<<Response<T> as Responder>::Body> {
+pub fn success_respond_to<T: Sized + Serialize + Default>(
+    req: &HttpRequest,
+    data: Option<T>,
+) -> HttpResponse<<Response<T> as Responder>::Body> {
     success(data).respond_to(req)
 }
 
 pub fn error<T: Sized + Serialize + Default>(data: Option<T>) -> Response<T> {
-    Response{
+    Response {
         data,
         msg: String::from("失败"),
-        ..Default::default() }
+        ..Default::default()
+    }
 }
 
-pub fn error_respond_to<T: Sized + Serialize + Default>(req: &HttpRequest, data: Option<T>) -> HttpResponse<<Response<T> as Responder>::Body> {
+pub fn error_respond_to<T: Sized + Serialize + Default>(
+    req: &HttpRequest,
+    data: Option<T>,
+) -> HttpResponse<<Response<T> as Responder>::Body> {
     error(data).respond_to(req)
 }
 
-pub fn throw(req: &HttpRequest, ec: ErrorCode) -> HttpResponse<<Response<ErrorCode> as Responder>::Body> {
-    Response::<ErrorCode>{
+pub fn throw(
+    req: &HttpRequest,
+    ec: ErrorCode,
+) -> HttpResponse<<Response<ErrorCode> as Responder>::Body> {
+    Response::<ErrorCode> {
         data: None,
         msg: ec.message().parse().unwrap(),
-        code: ec.code() as i32
-    }.respond_to(req)
+        code: ec.code() as i32,
+    }
+    .respond_to(req)
 }
 
-pub fn throw_tips(req: &HttpRequest, ec: ErrorCode, tips: &'static str) -> HttpResponse<<Response<ErrorCode> as Responder>::Body> {
-    Response::<ErrorCode>{
+pub fn throw_tips(
+    req: &HttpRequest,
+    ec: ErrorCode,
+    tips: &'static str,
+) -> HttpResponse<<Response<ErrorCode> as Responder>::Body> {
+    Response::<ErrorCode> {
         data: None,
         msg: ec.message().replace("%s", tips).parse().unwrap(),
-        code: ec.code() as i32
-    }.respond_to(req)
+        code: ec.code() as i32,
+    }
+    .respond_to(req)
 }
 
-pub fn unauthorized<T: Sized + Serialize + Default>(req: &HttpRequest) -> HttpResponse<<Response<T> as Responder>::Body> {
-    let r: Response<String> = Response{
+pub fn unauthorized<T: Sized + Serialize + Default>(
+    req: &HttpRequest,
+) -> HttpResponse<<Response<T> as Responder>::Body> {
+    let r: Response<String> = Response {
         data: None,
         msg: String::from("无权限访问"),
-        ..Default::default() };
+        ..Default::default()
+    };
     r.respond_to(req)
 }
 
@@ -78,7 +98,7 @@ where
     }
 }
 
-impl<T:  Serialize> Display for Response<T> {
+impl<T: Serialize> Display for Response<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let serialized = serde_json::to_string(&self).unwrap();
         write!(f, "{}", serialized)
@@ -109,13 +129,22 @@ impl<T: Serialize> error::ResponseError for Response<T> {
     }
 }
 
-#[derive(Serialize, Default, Debug)]
+#[derive(Serialize, Default, Debug, Clone)]
 pub struct ErrorCode {
     pub code: i64,
     pub message: &'static str,
 }
 
 impl ErrorCode {
+
+    #[allow(dead_code)]
+    pub fn new(code: i64, message: &'static str) -> ErrorCode {
+        ErrorCode{
+            code,
+            message
+        }
+    }
+
     #[allow(dead_code)]
     pub fn code(&self) -> i64 {
         self.code
@@ -132,21 +161,35 @@ impl ErrorCode {
     }
 
     #[allow(dead_code)]
-    pub fn throw_tips(&self, req: &HttpRequest, tips: &'static str) -> HttpResponse<<Response<ErrorCode> as Responder>::Body> {
-        Response::<ErrorCode>{
-            data: None,
-            msg: self.message().replace("%s", tips).parse().unwrap(),
-            code: self.code() as i32
-        }.respond_to(req)
+    pub fn tips(&self, tips: &'static str) -> String {
+        self.message().replace("%s", tips).parse().unwrap()
     }
 
     #[allow(dead_code)]
-    pub fn throw(&self, req: &HttpRequest) -> HttpResponse<<Response<ErrorCode> as Responder>::Body> {
-        Response::<ErrorCode>{
+    pub fn throw_tips(
+        &self,
+        req: &HttpRequest,
+        tips: &'static str,
+    ) -> HttpResponse<<Response<ErrorCode> as Responder>::Body> {
+        Response::<ErrorCode> {
+            data: None,
+            msg: self.message().replace("%s", tips).parse().unwrap(),
+            code: self.code() as i32,
+        }
+        .respond_to(req)
+    }
+
+    #[allow(dead_code)]
+    pub fn throw(
+        &self,
+        req: &HttpRequest,
+    ) -> HttpResponse<<Response<ErrorCode> as Responder>::Body> {
+        Response::<ErrorCode> {
             data: None,
             msg: self.message().parse().unwrap(),
-            code: self.code() as i32
-        }.respond_to(req)
+            code: self.code() as i32,
+        }
+        .respond_to(req)
     }
 }
 
@@ -183,7 +226,7 @@ pub trait Auth {
 #[allow(dead_code)]
 pub fn interceptor<A: Auth>(a: A) -> Option<Response<Vec<i32>>> {
     if !a.ok() {
-        return Some(a.response())
+        return Some(a.response());
     }
     None
 }
