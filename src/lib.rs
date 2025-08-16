@@ -5,6 +5,14 @@ use actix_web::{HttpRequest, HttpResponse, Responder, error};
 use serde::Serialize;
 use std::fmt::{Debug, Display, Formatter};
 
+///
+/// Examples
+///```text
+/// async fn test(req: actix_web::HttpRequest) -> impl Responder {
+///     success(&req, Some(String::from("Hey test!"))).respond_to(req)
+/// }
+///```
+///
 pub fn success<T: Sized + Serialize + Default>(data: Option<T>) -> Response<T> {
     Response {
         data,
@@ -13,6 +21,14 @@ pub fn success<T: Sized + Serialize + Default>(data: Option<T>) -> Response<T> {
     }
 }
 
+///
+/// Examples
+///```text
+/// async fn test(req: actix_web::HttpRequest) -> impl Responder {
+///     success_respond_to(&req, Some(String::from("Hey test!")))
+/// }
+///```
+///
 pub fn success_respond_to<T: Sized + Serialize + Default>(
     req: &HttpRequest,
     data: Option<T>,
@@ -20,6 +36,14 @@ pub fn success_respond_to<T: Sized + Serialize + Default>(
     success(data).respond_to(req)
 }
 
+///
+/// Examples
+///```text
+/// async fn test(req: actix_web::HttpRequest) -> impl Responder {
+///     error(&req, Some(String::from("Hey test!"))).respond_to(req)
+/// }
+///```
+///
 pub fn error<T: Sized + Serialize + Default>(data: Option<T>) -> Response<T> {
     Response {
         data,
@@ -28,6 +52,14 @@ pub fn error<T: Sized + Serialize + Default>(data: Option<T>) -> Response<T> {
     }
 }
 
+///
+/// Examples
+///```text
+/// async fn test(req: actix_web::HttpRequest) -> impl Responder {
+///     error_respond_to(&req, Some(String::from("Hey test!")))
+/// }
+///```
+///
 pub fn error_respond_to<T: Sized + Serialize + Default>(
     req: &HttpRequest,
     data: Option<T>,
@@ -35,6 +67,14 @@ pub fn error_respond_to<T: Sized + Serialize + Default>(
     error(data).respond_to(req)
 }
 
+///
+/// Examples
+///```text
+/// async fn test(req: actix_web::HttpRequest) -> impl Responder {
+///     return throw(&req, errcode::VALID_CODE_ERROR);
+/// }
+///```
+///
 pub fn throw(
     req: &HttpRequest,
     ec: ErrorCode,
@@ -47,6 +87,14 @@ pub fn throw(
     .respond_to(req)
 }
 
+///
+/// Examples
+///```text
+/// async fn test(req: actix_web::HttpRequest) -> impl Responder {
+///     return throw_tips(&req, errcode::NOT_EXIST, "tips msg");
+/// }
+///```
+///
 pub fn throw_tips(
     req: &HttpRequest,
     ec: ErrorCode,
@@ -60,6 +108,14 @@ pub fn throw_tips(
     .respond_to(req)
 }
 
+///
+/// Examples
+///```text
+/// async fn test(req: actix_web::HttpRequest) -> impl Responder {
+///     return unauthorized::<String>(&req);
+/// }
+///```
+///
 pub fn unauthorized<T: Sized + Serialize + Default>(
     req: &HttpRequest,
 ) -> HttpResponse<<Response<T> as Responder>::Body> {
@@ -160,11 +216,28 @@ impl ErrorCode {
         &self.message
     }
 
+    ///
+    /// Examples
+    ///```text
+    /// async fn test(req: actix_web::HttpRequest) -> impl Responder {
+    ///     let tips = errcode::NOT_EXIST.tips("gg");
+    ///     return ...;
+    /// }
+    ///```
+    ///
     #[allow(dead_code)]
     pub fn tips(&self, tips: &'static str) -> String {
         self.message().replace("%s", tips).parse().unwrap()
     }
 
+    ///
+    /// Examples
+    ///```text
+    /// async fn test(req: actix_web::HttpRequest) -> impl Responder {
+    ///     return errcode::NOT_EXIST.throw_tips(&req, "gg");
+    /// }
+    ///```
+    ///
     #[allow(dead_code)]
     pub fn throw_tips(
         &self,
@@ -178,7 +251,15 @@ impl ErrorCode {
         }
         .respond_to(req)
     }
-
+    
+    ///
+    /// Examples
+    ///```text
+    /// async fn test(req: actix_web::HttpRequest) -> impl Responder {
+    ///     return errcode::VALID_CODE_ERROR.throw(&req);
+    /// }
+    ///```
+    ///
     #[allow(dead_code)]
     pub fn throw(
         &self,
@@ -224,6 +305,7 @@ pub trait Auth {
 
 // 拦截器
 #[allow(dead_code)]
+#[deprecated]
 pub fn interceptor<A: Auth>(a: A) -> Option<Response<Vec<i32>>> {
     if !a.ok() {
         return Some(a.response());
