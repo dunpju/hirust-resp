@@ -324,6 +324,35 @@ pub struct Error {
 }
 
 impl Error {
+    ///
+    /// Examples:
+    /// Registration middleware
+    ///```text
+    /// App::new().wrap(ErrorHandlers::new().handler(StatusCode::INTERNAL_SERVER_ERROR, internal_server::handler))
+    ///```
+    ///
+    /// Define middleware handler
+    ///```text
+    /// pub fn handler<B>(mut res: dev::ServiceResponse<B>) -> actix_web::Result<ErrorHandlerResponse<B>> {
+    ///     println!("{}", "add_internal_server_error_header");
+    ///     Ok(ErrorHandlerResponse::Response(res.map_into_left_body()))
+    /// }
+    ///```
+    ///
+    /// Return an error
+    ///```text
+    /// #[get(path = "/index")]
+    /// #[allow(unused)]
+    /// async fn index(req: HttpRequest) -> Result<impl Responder, Error> {
+    ///     if true {
+    ///         let message = String::from("测试");
+    ///         Err::<HttpResponse, Error>(Error::new(file!(), line!(), message))
+    ///     } else {
+    ///         Ok(success_respond_to(&req, Some("测试")))
+    ///     }
+    /// }
+    ///```
+    ///
     #[allow(unused)]
     pub fn new(file: &'static str, line: u32, message: String) -> Self {
         Self { file, line, message }
