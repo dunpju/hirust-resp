@@ -2,9 +2,9 @@ use actix_web::body::BoxBody;
 use actix_web::http::StatusCode;
 use actix_web::http::header::ContentType;
 use actix_web::{HttpRequest, HttpResponse, Responder, error};
+use derive_more::derive::{Display, Error};
 use serde::Serialize;
 use std::fmt::{Debug, Display, Formatter};
-use derive_more::derive::{Display, Error};
 
 ///
 /// Examples
@@ -155,6 +155,15 @@ where
     }
 }
 
+impl<T> Response<T>
+where
+    T: Sized + Serialize,
+{
+    pub fn body_json(self) -> String {
+        serde_json::to_string(&self).unwrap()
+    }
+}
+
 impl<T: Serialize> Display for Response<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let serialized = serde_json::to_string(&self).unwrap();
@@ -193,13 +202,9 @@ pub struct ErrorCode {
 }
 
 impl ErrorCode {
-
     #[allow(dead_code)]
     pub fn new(code: i64, message: &'static str) -> ErrorCode {
-        ErrorCode{
-            code,
-            message
-        }
+        ErrorCode { code, message }
     }
 
     #[allow(dead_code)]
@@ -252,7 +257,7 @@ impl ErrorCode {
         }
         .respond_to(req)
     }
-    
+
     ///
     /// Examples
     ///```text
@@ -355,7 +360,11 @@ impl Error {
     ///
     #[allow(unused)]
     pub fn new(file: &'static str, line: u32, message: String) -> Self {
-        Self { file, line, message }
+        Self {
+            file,
+            line,
+            message,
+        }
     }
 }
 
