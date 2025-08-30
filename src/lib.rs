@@ -4,6 +4,7 @@ use actix_web::http::header::ContentType;
 use actix_web::{HttpRequest, HttpResponse, Responder, error};
 use serde::Serialize;
 use std::fmt::{Debug, Display, Formatter};
+use derive_more::derive::{Display, Error};
 
 ///
 /// Examples
@@ -312,3 +313,22 @@ pub fn interceptor<A: Auth>(a: A) -> Option<Response<Vec<i32>>> {
     }
     None
 }
+
+#[derive(Debug, Display, Error)]
+#[display("{file}:{line} {message}")]
+#[allow(unused)]
+pub struct Error {
+    pub file: &'static str,
+    pub line: u32,
+    pub message: String,
+}
+
+impl Error {
+    #[allow(unused)]
+    pub fn new(file: &'static str, line: u32, message: String) -> Self {
+        Self { file, line, message }
+    }
+}
+
+// Use default implementation for `error_response()` method
+impl error::ResponseError for Error {}
